@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đọc tiếng Nhật với Furigana và Từ điển</title>
+    <style>
+        /* Thiết lập giao diện tổng thể */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 2.5;
+            padding: 40px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        /* 1. CSS CHO FURIGANA */
+        ruby {
+            ruby-align: center;
+        }
+        rt {
+            font-size: 14px; /* Kích thước chữ của Furigana */
+            color: #555;
+        }
+
+        /* 2. CSS CHO TỪ VÀ HIỆU ỨNG HOVER (CHẠM CHUỘT) */
+        .word {
+            position: relative;
+            cursor: help; /* Đổi trỏ chuột thành dấu hỏi chấm để gợi ý có thể tương tác */
+            display: inline-block;
+            font-size: 28px; /* Kích thước chữ Kanji */
+            border-bottom: 2px dotted #a8d5ba; /* Dòng kẻ dưới mờ mờ để nhận biết từ có nghĩa */
+            transition: color 0.2s;
+        }
+
+        .word:hover {
+            color: #27ae60; /* Đổi màu chữ khi đưa chuột vào */
+        }
+
+        /* 3. TẠO HỘP THOẠI HIỂN THỊ NGHĨA (TOOLTIP) */
+        .word::after {
+            content: attr(data-meaning); /* Lấy nội dung từ thuộc tính data-meaning trong HTML */
+            position: absolute;
+            bottom: 120%; /* Đẩy tooltip lên trên chữ */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: normal;
+            white-space: nowrap; /* Không cho chữ xuống dòng trong tooltip */
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none; /* Tránh việc chuột vướng vào tooltip */
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Mũi tên nhỏ trỏ xuống cho tooltip */
+        .word::before {
+            content: '';
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #2c3e50 transparent transparent transparent;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        /* Hiển thị tooltip khi di chuột vào */
+        .word:hover::after,
+        .word:hover::before {
+            opacity: 1;
+            visibility: visible;
+            bottom: 105%; /* Hiệu ứng trượt nhẹ từ trên xuống */
+        }
+        .word:hover::before {
+            bottom: calc(105% - 12px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Ví dụ: Đoạn văn Tiếng Nhật</h2>
+    
+    <p>
+        <span class="word" data-meaning="Tôi">
+            <ruby>私<rt>わたし</rt></ruby>
+        </span>
+        は
+        
+        <span class="word" data-meaning="Tiếng Nhật">
+            <ruby>日本語<rt>にほんご</rt></ruby>
+        </span>
+        を
+        
+        <span class="word" data-meaning="Học tập / Việc học">
+            <ruby>勉強<rt>べんきょう</rt></ruby>
+        </span>
+        しています。
+    </p>
+
+    <p>
+        <span class="word" data-meaning="Hôm nay">
+            <ruby>今日<rt>きょう</rt></ruby>
+        </span>
+        の
+        
+        <span class="word" data-meaning="Thời tiết">
+            <ruby>天気<rt>てんき</rt></ruby>
+        </span>
+        はとても
+        
+        <span class="word" data-meaning="Tốt / Đẹp">
+            <ruby>良<rt>い</rt></ruby>
+        </span>
+        いです。
+    </p>
+</div>
+
+</body>
+</html>
