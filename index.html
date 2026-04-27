@@ -3,158 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Công cụ tạo Furigana tự động</title>
+    <title>Trò Chơi Đập Chuột 🐹</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f4f8;
-            color: #333;
+            text-align: center;
+            background-color: #a8e6cf;
+            margin: 0;
             padding: 20px;
-            display: flex;
-            justify-content: center;
         }
-        .container {
-            background: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            width: 100%;
-            max-width: 700px;
-        }
-        h2 {
-            margin-top: 0;
+
+        h1 {
             color: #2c3e50;
+            margin-bottom: 5px;
         }
-        textarea {
-            width: 100%;
-            height: 120px;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-            resize: vertical;
-            box-sizing: border-box;
-            margin-bottom: 15px;
+
+        .stats {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d35400;
+            margin-bottom: 20px;
         }
+
         button {
-            background-color: #3498db;
+            background-color: #e74c3c;
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 16px;
+            padding: 10px 25px;
+            font-size: 18px;
             border-radius: 8px;
             cursor: pointer;
-            transition: background 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: 0.2s;
         }
+
         button:hover {
-            background-color: #2980b9;
+            background-color: #c0392b;
+            transform: scale(1.05);
         }
+
         button:disabled {
             background-color: #95a5a6;
             cursor: not-allowed;
+            transform: none;
         }
-        #status {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #e67e22;
-            font-style: italic;
-        }
-        #output {
-            margin-top: 25px;
+
+        /* Lưới chứa các hố chuột */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 350px;
+            margin: 30px auto;
+            background: #8b5a2b;
             padding: 20px;
-            background: #f9fbfd;
-            border: 1px dashed #bdc3c7;
-            border-radius: 8px;
-            font-size: 24px;
-            line-height: 2.5;
-            min-height: 80px;
+            border-radius: 15px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
-        /* Style cho Furigana */
-        ruby {
-            ruby-align: center;
+
+        /* Từng cái hố */
+        .hole {
+            background: #3e2723;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden; /* Giấu con chuột khi nó tụt xuống */
+            box-shadow: inset 0 10px 10px rgba(0,0,0,0.8);
         }
-        rt {
-            font-size: 13px;
-            color: #e74c3c; /* Màu đỏ cho dễ nhìn */
+
+        /* Con chuột (dùng Emoji) */
+        .mole {
+            font-size: 60px;
+            position: absolute;
+            top: 100%; /* Mặc định giấu dưới đáy hố */
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: pointer;
+            transition: top 0.2s ease-out; /* Hiệu ứng trồi lên mượt mà */
+            user-select: none;
+        }
+
+        /* Khi hố có class "up", con chuột trồi lên */
+        .hole.up .mole {
+            top: 10px; 
         }
     </style>
-
-    <script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 </head>
 <body>
 
-<div class="container">
-    <h2>Trình tạo Furigana tự động</h2>
-    <p>Nhập văn bản tiếng Nhật có chứa Kanji vào bên dưới:</p>
-    
-    <textarea id="inputText" placeholder="Ví dụ: 日本語を勉強しています。"></textarea>
-    
-    <button id="convertBtn" disabled>Đang tải từ điển...</button>
-    <div id="status">Hệ thống đang tải bộ từ điển tiếng Nhật (lần đầu sẽ mất vài giây)...</div>
+    <h1>Trò Chơi Đập Chuột 🐹</h1>
+    <div class="stats">
+        Điểm: <span id="score">0</span> | Thời gian: <span id="time">15</span>s
+    </div>
+    <button id="startBtn">Bắt Đầu Chơi</button>
 
-    <div id="output">Kết quả sẽ hiển thị ở đây...</div>
-</div>
+    <div class="game-board">
+        <div class="hole"><div class="mole">🐹</div></div>
+        <div class="hole"><div class="mole">🐹</div></div>
+        <div class="hole"><div class="mole">🐹</div></div>
+        <div class="hole"><div class="mole">🐹</div></div>
+        <div class="hole"><div class="mole">🐹</div></div>
+        <div class="hole"><div class="mole">🐹</div></div>
+        <div class="hole"><div class="mole">🐹</div></div>
+        <div class="hole"><div class="mole">🐹</div></div>
+        <div class="hole"><div class="mole">🐹</div></div>
+    </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', async () => {
-        const btn = document.getElementById('convertBtn');
-        const input = document.getElementById('inputText');
-        const output = document.getElementById('output');
-        const status = document.getElementById('status');
+    <script>
+        const holes = document.querySelectorAll('.hole');
+        const scoreBoard = document.getElementById('score');
+        const timeBoard = document.getElementById('time');
+        const moles = document.querySelectorAll('.mole');
+        const startBtn = document.getElementById('startBtn');
 
-        // Khởi tạo Kuroshiro
-        const kuroshiro = new Kuroshiro();
-        
-        try {
-            // Khởi tạo bộ phân tích Kuromoji và trỏ tới thư mục chứa từ điển (hosted trên CDN)
-           await kuroshiro.init(new KuromojiAnalyzer({
-    dictPath: "https://unpkg.com/kuromoji@0.1.2/dict"
-}));
-            
-            // Tải xong từ điển, cho phép người dùng click nút
-            status.style.color = "#27ae60";
-            status.innerText = "✅ Từ điển đã sẵn sàng!";
-            btn.innerText = "Tạo Furigana";
-            btn.disabled = false;
+        let lastHole;
+        let timeUp = false;
+        let score = 0;
+        let gameTime = 15; // Thời gian 1 lượt chơi (giây)
 
-        } catch (error) {
-            status.style.color = "#c0392b";
-            status.innerText = "❌ Lỗi khi tải từ điển: " + error.message;
-            return;
+        // Hàm tạo thời gian ngẫu nhiên chuột xuất hiện (từ min đến max mili-giây)
+        function randomTime(min, max) {
+            return Math.round(Math.random() * (max - min) + min);
         }
 
-        // Sự kiện khi bấm nút tạo Furigana
-        btn.addEventListener('click', async () => {
-            const text = input.value.trim();
-            if (!text) {
-                alert("Vui lòng nhập văn bản!");
-                return;
+        // Hàm chọn một cái hố ngẫu nhiên để chuột trồi lên
+        function randomHole(holes) {
+            const idx = Math.floor(Math.random() * holes.length);
+            const hole = holes[idx];
+            
+            // Tránh việc chuột xuất hiện 2 lần liên tiếp ở cùng 1 hố
+            if (hole === lastHole) {
+                return randomHole(holes);
             }
+            lastHole = hole;
+            return hole;
+        }
 
-            btn.disabled = true;
-            status.style.color = "#e67e22";
-            status.innerText = "⏳ Đang phân tích ngữ pháp và tạo Furigana...";
+        // Hàm điều khiển chuột trồi lên và thụt xuống
+        function peep() {
+            const time = randomTime(400, 1000); // Chuột hiện từ 0.4s đến 1s
+            const hole = randomHole(holes);
+            
+            hole.classList.add('up'); // Thêm class 'up' để CSS kéo con chuột lên
+            
+            setTimeout(() => {
+                hole.classList.remove('up'); // Gỡ class 'up' để chuột tụt xuống
+                if (!timeUp) peep(); // Nếu chưa hết giờ, gọi tiếp chuột khác
+            }, time);
+        }
 
-            try {
-                // Sử dụng hàm convert: mode "furigana" sẽ tự động tạo thẻ <ruby> HTML
-                const result = await kuroshiro.convert(text, { 
-                    to: "hiragana", 
-                    mode: "furigana" 
-                });
-                
-                output.innerHTML = result;
-                status.style.color = "#27ae60";
-                status.innerText = "✅ Hoàn tất!";
-            } catch (error) {
-                status.style.color = "#c0392b";
-                status.innerText = "❌ Lỗi xử lý: " + error.message;
-            } finally {
-                btn.disabled = false;
-            }
-        });
-    });
-</script>
+        // Hàm bắt đầu game
+        function startGame() {
+            scoreBoard.textContent = 0;
+            timeBoard.textContent = gameTime;
+            timeUp = false;
+            score = 0;
+            startBtn.disabled = true; // Khóa nút bắt đầu
 
+            let timeLeft = gameTime;
+            peep(); // Gọi chuột ra
+
+            // Đồng hồ đếm ngược
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timeBoard.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdown); // Dừng đồng hồ
+                    timeUp = true; // Báo hiệu hết giờ để chuột ngừng ra
+                    startBtn.disabled = false; // Mở lại nút
+                    setTimeout(() => alert(`Hết giờ! Bạn đập được ${score} con chuột!`), 500);
+                }
+            }, 1000); // Trừ 1 giây mỗi lần lặp
+        }
+
+        // Hàm xử lý khi đập trúng chuột
+        function bonk(e) {
+            if (!e.isTrusted) return; // Chống gian lận click bằng code
+            score++;
+            this.parentNode.classList.remove('up'); // Đập trúng thì chuột tụt xuống ngay
+            scoreBoard.textContent = score;
+        }
+
+        // Gắn sự kiện click cho tất cả con chuột
+        moles.forEach(mole => mole.addEventListener('click', bonk));
+        
+        // Gắn sự kiện click cho nút Bắt đầu
+        startBtn.addEventListener('click', startGame);
+
+    </script>
 </body>
 </html>
