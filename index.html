@@ -108,9 +108,9 @@
         
         try {
             // Khởi tạo bộ phân tích Kuromoji và trỏ tới thư mục chứa từ điển (hosted trên CDN)
-            await kuroshiro.init(new KuromojiAnalyzer({
-                dictPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"
-            }));
+           await kuroshiro.init(new KuromojiAnalyzer({
+    dictPath: "https://unpkg.com/kuromoji@0.1.2/dict"
+}));
             
             // Tải xong từ điển, cho phép người dùng click nút
             status.style.color = "#27ae60";
