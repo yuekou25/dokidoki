@@ -3,195 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trò Chơi Đập Chuột 🐹</title>
+    <title>Game Rắn Săn Mồi 🐍</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
-            background-color: #a8e6cf;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
             margin: 0;
-            padding: 20px;
-        }
-
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-
-        .stats {
-            font-size: 20px;
-            font-weight: bold;
-            color: #d35400;
-            margin-bottom: 20px;
-        }
-
-        button {
-            background-color: #e74c3c;
+            background-color: #2c3e50;
             color: white;
-            border: none;
-            padding: 10px 25px;
-            font-size: 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: 0.2s;
+            font-family: 'Segoe UI', sans-serif;
         }
-
-        button:hover {
-            background-color: #c0392b;
-            transform: scale(1.05);
-        }
-
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Lưới chứa các hố chuột */
-        .game-board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            width: 350px;
-            margin: 30px auto;
-            background: #8b5a2b;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        /* Từng cái hố */
-        .hole {
-            background: #3e2723;
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
+        h1 { margin-bottom: 10px; }
+        #game-container {
             position: relative;
-            overflow: hidden; /* Giấu con chuột khi nó tụt xuống */
-            box-shadow: inset 0 10px 10px rgba(0,0,0,0.8);
+            border: 5px solid #ecf0f1;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-
-        /* Con chuột (dùng Emoji) */
-        .mole {
-            font-size: 60px;
-            position: absolute;
-            top: 100%; /* Mặc định giấu dưới đáy hố */
-            left: 50%;
-            transform: translateX(-50%);
-            cursor: pointer;
-            transition: top 0.2s ease-out; /* Hiệu ứng trồi lên mượt mà */
-            user-select: none;
+        canvas {
+            display: block;
+            background-color: #000;
         }
-
-        /* Khi hố có class "up", con chuột trồi lên */
-        .hole.up .mole {
-            top: 10px; 
+        .score-board {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .instructions {
+            margin-top: 15px;
+            color: #bdc3c7;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Trò Chơi Đập Chuột 🐹</h1>
-    <div class="stats">
-        Điểm: <span id="score">0</span> | Thời gian: <span id="time">15</span>s
+    <h1>Game Rắn Săn Mồi 🐍</h1>
+    <div class="score-board">Điểm: <span id="score">0</span></div>
+    
+    <div id="game-container">
+        <canvas id="snakeGame" width="400" height="400"></canvas>
     </div>
-    <button id="startBtn">Bắt Đầu Chơi</button>
 
-    <div class="game-board">
-        <div class="hole"><div class="mole">🐹</div></div>
-        <div class="hole"><div class="mole">🐹</div></div>
-        <div class="hole"><div class="mole">🐹</div></div>
-        <div class="hole"><div class="mole">🐹</div></div>
-        <div class="hole"><div class="mole">🐹</div></div>
-        <div class="hole"><div class="mole">🐹</div></div>
-        <div class="hole"><div class="mole">🐹</div></div>
-        <div class="hole"><div class="mole">🐹</div></div>
-        <div class="hole"><div class="mole">🐹</div></div>
-    </div>
+    <div class="instructions">Sử dụng các phím mũi tên (↑ ↓ ← →) để di chuyển</div>
 
     <script>
-        const holes = document.querySelectorAll('.hole');
-        const scoreBoard = document.getElementById('score');
-        const timeBoard = document.getElementById('time');
-        const moles = document.querySelectorAll('.mole');
-        const startBtn = document.getElementById('startBtn');
+        const canvas = document.getElementById("snakeGame");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
 
-        let lastHole;
-        let timeUp = false;
+        const box = 20; // Kích thước 1 ô vuông
         let score = 0;
-        let gameTime = 15; // Thời gian 1 lượt chơi (giây)
+        let gameSpeed = 100; // Tốc độ game (ms)
 
-        // Hàm tạo thời gian ngẫu nhiên chuột xuất hiện (từ min đến max mili-giây)
-        function randomTime(min, max) {
-            return Math.round(Math.random() * (max - min) + min);
+        // Khởi tạo con rắn (mảng các tọa độ)
+        let snake = [
+            {x: 9 * box, y: 10 * box},
+            {x: 8 * box, y: 10 * box}
+        ];
+
+        // Khởi tạo thức ăn
+        let food = {
+            x: Math.floor(Math.random() * 19 + 1) * box,
+            y: Math.floor(Math.random() * 19 + 1) * box
+        };
+
+        let d; // Hướng di chuyển
+
+        // Lắng nghe sự kiện bàn phím
+        document.addEventListener("keydown", direction);
+
+        function direction(event) {
+            if(event.keyCode == 37 && d != "RIGHT") d = "LEFT";
+            else if(event.keyCode == 38 && d != "DOWN") d = "UP";
+            else if(event.keyCode == 39 && d != "LEFT") d = "RIGHT";
+            else if(event.keyCode == 40 && d != "UP") d = "DOWN";
         }
 
-        // Hàm chọn một cái hố ngẫu nhiên để chuột trồi lên
-        function randomHole(holes) {
-            const idx = Math.floor(Math.random() * holes.length);
-            const hole = holes[idx];
-            
-            // Tránh việc chuột xuất hiện 2 lần liên tiếp ở cùng 1 hố
-            if (hole === lastHole) {
-                return randomHole(holes);
+        // Kiểm tra va chạm với thân
+        function collision(head, array) {
+            for(let i = 0; i < array.length; i++) {
+                if(head.x == array[i].x && head.y == array[i].y) return true;
             }
-            lastHole = hole;
-            return hole;
+            return false;
         }
 
-        // Hàm điều khiển chuột trồi lên và thụt xuống
-        function peep() {
-            const time = randomTime(400, 1000); // Chuột hiện từ 0.4s đến 1s
-            const hole = randomHole(holes);
-            
-            hole.classList.add('up'); // Thêm class 'up' để CSS kéo con chuột lên
-            
-            setTimeout(() => {
-                hole.classList.remove('up'); // Gỡ class 'up' để chuột tụt xuống
-                if (!timeUp) peep(); // Nếu chưa hết giờ, gọi tiếp chuột khác
-            }, time);
+        function draw() {
+            // Xóa canvas cũ
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Vẽ rắn
+            for(let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = (i == 0) ? "#2ecc71" : "#27ae60"; // Đầu màu sáng hơn thân
+                ctx.strokeStyle = "#000";
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+            }
+
+            // Vẽ thức ăn
+            ctx.fillStyle = "#e74c3c";
+            ctx.fillRect(food.x, food.y, box, box);
+
+            // Lấy tọa độ đầu rắn cũ
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+
+            // Di chuyển đầu rắn theo hướng d
+            if( d == "LEFT") snakeX -= box;
+            if( d == "UP") snakeY -= box;
+            if( d == "RIGHT") snakeX += box;
+            if( d == "DOWN") snakeY += box;
+
+            // Kiểm tra nếu ăn được mồi
+            if(snakeX == food.x && snakeY == food.y) {
+                score++;
+                scoreElement.innerHTML = score;
+                // Tạo thức ăn mới
+                food = {
+                    x: Math.floor(Math.random() * 19 + 1) * box,
+                    y: Math.floor(Math.random() * 19 + 1) * box
+                };
+            } else {
+                // Xóa đuôi rắn (tạo cảm giác di chuyển)
+                if (d) snake.pop(); 
+            }
+
+            // Tạo đầu mới cho rắn
+            let newHead = { x: snakeX, y: snakeY };
+
+            // Kiểm tra luật thua (va tường hoặc va vào thân)
+            if(snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake)) {
+                clearInterval(game);
+                alert("Game Over! Điểm của bạn: " + score);
+                location.reload(); // Tải lại trang để chơi mới
+            }
+
+            if (d) snake.unshift(newHead); // Thêm đầu mới vào mảng
         }
 
-        // Hàm bắt đầu game
-        function startGame() {
-            scoreBoard.textContent = 0;
-            timeBoard.textContent = gameTime;
-            timeUp = false;
-            score = 0;
-            startBtn.disabled = true; // Khóa nút bắt đầu
-
-            let timeLeft = gameTime;
-            peep(); // Gọi chuột ra
-
-            // Đồng hồ đếm ngược
-            const countdown = setInterval(() => {
-                timeLeft--;
-                timeBoard.textContent = timeLeft;
-
-                if (timeLeft <= 0) {
-                    clearInterval(countdown); // Dừng đồng hồ
-                    timeUp = true; // Báo hiệu hết giờ để chuột ngừng ra
-                    startBtn.disabled = false; // Mở lại nút
-                    setTimeout(() => alert(`Hết giờ! Bạn đập được ${score} con chuột!`), 500);
-                }
-            }, 1000); // Trừ 1 giây mỗi lần lặp
-        }
-
-        // Hàm xử lý khi đập trúng chuột
-        function bonk(e) {
-            if (!e.isTrusted) return; // Chống gian lận click bằng code
-            score++;
-            this.parentNode.classList.remove('up'); // Đập trúng thì chuột tụt xuống ngay
-            scoreBoard.textContent = score;
-        }
-
-        // Gắn sự kiện click cho tất cả con chuột
-        moles.forEach(mole => mole.addEventListener('click', bonk));
-        
-        // Gắn sự kiện click cho nút Bắt đầu
-        startBtn.addEventListener('click', startGame);
-
+        // Chạy hàm draw lặp lại theo tốc độ gameSpeed
+        let game = setInterval(draw, gameSpeed);
     </script>
 </body>
 </html>
